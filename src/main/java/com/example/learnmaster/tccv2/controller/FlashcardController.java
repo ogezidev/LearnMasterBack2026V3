@@ -1,11 +1,13 @@
 package com.example.learnmaster.tccv2.controller;
 
+import com.example.learnmaster.tccv2.dto.FlashcardLoteRequest;
 import com.example.learnmaster.tccv2.dto.FlashcardRequest;
 import com.example.learnmaster.tccv2.exception.ApiException;
 import com.example.learnmaster.tccv2.model.Flashcard;
 import com.example.learnmaster.tccv2.repository.DeckRepository;
 import com.example.learnmaster.tccv2.repository.FlashcardRepository;
 import com.example.learnmaster.tccv2.security.UsuarioLogado;
+import com.example.learnmaster.tccv2.service.HierarquiaService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -20,21 +22,29 @@ public class FlashcardController {
 
     private final FlashcardRepository flashcardRepository;
     private final DeckRepository deckRepository;
+    private final HierarquiaService hierarquiaService;
 
-    public FlashcardController(FlashcardRepository flashcardRepository, DeckRepository deckRepository) {
+    public FlashcardController(FlashcardRepository flashcardRepository, DeckRepository deckRepository,
+                               HierarquiaService hierarquiaService) {
         this.flashcardRepository = flashcardRepository;
         this.deckRepository = deckRepository;
+        this.hierarquiaService = hierarquiaService;
     }
 
     @PostMapping
     public Flashcard criar(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody FlashcardRequest req) {
-        Integer usuarioId = UsuarioLogado.id(jwt);
-        exigirDeck(req.deckId(), usuarioId);
+        exigirDeck(req.deckId(), UsuarioLogado.id(jwt));
 
         Flashcard flashcard = new Flashcard();
         preencher(flashcard, req);
-        flashcard.setUsuarioId(usuarioId);
         return flashcardRepository.save(flashcard);
+    }
+
+    // Tela Criar: ate 5 cards de uma vez, todos salvos ou nenhum
+    @PostMapping("/lote")
+    public List<Flashcard> criarLote(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody FlashcardLoteRequest req) {
+        exigirDeck(req.deckId(), UsuarioLogado.id(jwt));
+        return hierarquiaService.criarCards(req.deckId(), req.cards());
     }
 
     @GetMapping
@@ -56,16 +66,15 @@ public class FlashcardController {
         return flashcardRepository.save(flashcard);
     }
 
+    // Apaga o card e as avaliacoes dele, numa transacao
     @DeleteMapping("/{id}")
     public void deletar(@AuthenticationPrincipal Jwt jwt, @PathVariable Integer id) {
-        flashcardRepository.delete(doUsuario(jwt, id));
+        hierarquiaService.excluirFlashcard(doUsuario(jwt, id));
     }
 
-    // "nome" e uma copia da frente mantida por compatibilidade com a tabela atual (sai na Fase 3)
     private void preencher(Flashcard flashcard, FlashcardRequest req) {
         flashcard.setFrente(req.frente());
         flashcard.setVerso(req.verso());
-        flashcard.setNome(req.frente());
         flashcard.setDeckId(req.deckId());
     }
 

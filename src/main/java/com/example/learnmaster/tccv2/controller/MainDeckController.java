@@ -5,6 +5,7 @@ import com.example.learnmaster.tccv2.exception.ApiException;
 import com.example.learnmaster.tccv2.model.MainDeck;
 import com.example.learnmaster.tccv2.repository.MainDeckRepository;
 import com.example.learnmaster.tccv2.security.UsuarioLogado;
+import com.example.learnmaster.tccv2.service.HierarquiaService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -18,9 +19,11 @@ import java.util.List;
 public class MainDeckController {
 
     private final MainDeckRepository mainDeckRepository;
+    private final HierarquiaService hierarquiaService;
 
-    public MainDeckController(MainDeckRepository mainDeckRepository) {
+    public MainDeckController(MainDeckRepository mainDeckRepository, HierarquiaService hierarquiaService) {
         this.mainDeckRepository = mainDeckRepository;
+        this.hierarquiaService = hierarquiaService;
     }
 
     @PostMapping
@@ -49,9 +52,10 @@ public class MainDeckController {
         return mainDeckRepository.save(mainDeck);
     }
 
+    // Apaga o LearnDeck com todos os decks, cards e avaliacoes dele, numa transacao
     @DeleteMapping("/{id}")
     public void deletar(@AuthenticationPrincipal Jwt jwt, @PathVariable Integer id) {
-        mainDeckRepository.delete(doUsuario(jwt, id));
+        hierarquiaService.excluirMainDeck(doUsuario(jwt, id));
     }
 
     private MainDeck doUsuario(Jwt jwt, Integer id) {

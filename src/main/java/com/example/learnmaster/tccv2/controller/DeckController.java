@@ -6,6 +6,7 @@ import com.example.learnmaster.tccv2.model.Deck;
 import com.example.learnmaster.tccv2.repository.DeckRepository;
 import com.example.learnmaster.tccv2.repository.MainDeckRepository;
 import com.example.learnmaster.tccv2.security.UsuarioLogado;
+import com.example.learnmaster.tccv2.service.HierarquiaService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -20,21 +21,22 @@ public class DeckController {
 
     private final DeckRepository deckRepository;
     private final MainDeckRepository mainDeckRepository;
+    private final HierarquiaService hierarquiaService;
 
-    public DeckController(DeckRepository deckRepository, MainDeckRepository mainDeckRepository) {
+    public DeckController(DeckRepository deckRepository, MainDeckRepository mainDeckRepository,
+                          HierarquiaService hierarquiaService) {
         this.deckRepository = deckRepository;
         this.mainDeckRepository = mainDeckRepository;
+        this.hierarquiaService = hierarquiaService;
     }
 
     @PostMapping
     public Deck criar(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody DeckRequest req) {
-        Integer usuarioId = UsuarioLogado.id(jwt);
-        exigirMainDeck(req.mainDeckId(), usuarioId);
+        exigirMainDeck(req.mainDeckId(), UsuarioLogado.id(jwt));
 
         Deck deck = new Deck();
         deck.setNome(req.nome().trim());
         deck.setMainDeckId(req.mainDeckId());
-        deck.setUsuarioId(usuarioId);
         return deckRepository.save(deck);
     }
 
@@ -59,9 +61,10 @@ public class DeckController {
         return deckRepository.save(deck);
     }
 
+    // Apaga o deck com todos os cards e avaliacoes dele, numa transacao
     @DeleteMapping("/{id}")
     public void deletar(@AuthenticationPrincipal Jwt jwt, @PathVariable Integer id) {
-        deckRepository.delete(doUsuario(jwt, id));
+        hierarquiaService.excluirDeck(doUsuario(jwt, id));
     }
 
     private Deck doUsuario(Jwt jwt, Integer id) {

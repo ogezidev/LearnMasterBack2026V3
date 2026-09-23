@@ -108,9 +108,7 @@ BEGIN TRY
 
     EXEC #garantir_indice 'MainDeck',  'usuario_id';
     EXEC #garantir_indice 'Deck',      'main_deck_id';
-    EXEC #garantir_indice 'Deck',      'usuario_id';
     EXEC #garantir_indice 'Flashcard', 'deck_id';
-    EXEC #garantir_indice 'Flashcard', 'usuario_id';
 
     COMMIT;
     PRINT '007 concluido.';

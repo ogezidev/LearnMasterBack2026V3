@@ -2,9 +2,11 @@ package com.example.learnmaster.tccv2.repository;
 
 import com.example.learnmaster.tccv2.model.Deck;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,4 +20,11 @@ public interface DeckRepository extends JpaRepository<Deck, Integer> {
     @Query("select d from Deck d where d.id = :id and d.mainDeckId in "
             + "(select m.id from MainDeck m where m.usuarioId = :usuarioId)")
     Optional<Deck> doUsuario(@Param("id") Integer id, @Param("usuarioId") Integer usuarioId);
+
+    @Query("select d.id from Deck d where d.mainDeckId = :mainDeckId")
+    List<Integer> idsDoMainDeck(@Param("mainDeckId") Integer mainDeckId);
+
+    @Modifying
+    @Query("delete from Deck d where d.id in :ids")
+    int apagar(@Param("ids") Collection<Integer> ids);
 }
