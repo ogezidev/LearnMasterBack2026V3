@@ -1,58 +1,52 @@
 package com.example.learnmaster.tccv2.controller;
 
+import com.example.learnmaster.tccv2.dto.*;
 import com.example.learnmaster.tccv2.model.Usuario;
-import com.example.learnmaster.tccv2.repository.UsuarioRepository;
+import com.example.learnmaster.tccv2.security.UsuarioLogado;
+import com.example.learnmaster.tccv2.service.ContaService;
+import com.example.learnmaster.tccv2.service.SessaoService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
+// So o proprio usuario logado: nao existe mais rota para listar, alterar ou apagar outros usuarios
 @RestController
-@RequestMapping("/usuarios")
+@RequestMapping("/usuarios/me")
 public class UsuarioController {
 
-    private final UsuarioRepository usuarioRepository;
+    private final ContaService contaService;
+    private final SessaoService sessaoService;
 
-    public UsuarioController(UsuarioRepository usuarioRepository) {
-        this.usuarioRepository = usuarioRepository;
+    public UsuarioController(ContaService contaService, SessaoService sessaoService) {
+        this.contaService = contaService;
+        this.sessaoService = sessaoService;
     }
 
-    // LOGIN
-    @PostMapping("/login")
-    public ResponseEntity<Usuario> login(@RequestBody Usuario loginData) {
-        return usuarioRepository
-                .findByEmailAndSenha(loginData.getEmail(), loginData.getSenha())
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(401).build());
-    }
-
-    // CREATE
-    @PostMapping
-    public Usuario criar(@RequestBody Usuario usuario){
-        return usuarioRepository.save(usuario);
-    }
-
-    // READ
     @GetMapping
-    public List<Usuario> listar(){
-        return usuarioRepository.findAll();
+    public UsuarioResponse me(@AuthenticationPrincipal Jwt jwt) {
+        return UsuarioResponse.of(contaService.buscar(UsuarioLogado.id(jwt)));
     }
 
-    @GetMapping("/{id}")
-    public Usuario buscar(@PathVariable Integer id){
-        return usuarioRepository.findById(id).orElse(null);
+    @PatchMapping
+    public UsuarioResponse atualizarNome(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody AtualizarNomeRequest req) {
+        return UsuarioResponse.of(contaService.atualizarNome(UsuarioLogado.id(jwt), req.nome()));
     }
 
-    // UPDATE
-    @PutMapping("/{id}")
-    public Usuario atualizar(@PathVariable Integer id, @RequestBody Usuario usuario){
-        usuario.setId(id);
-        return usuarioRepository.save(usuario);
+    @PutMapping("/email")
+    public UsuarioResponse alterarEmail(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody AlterarEmailRequest req) {
+        return UsuarioResponse.of(contaService.alterarEmail(UsuarioLogado.id(jwt), req.email(), req.senhaAtual()));
     }
 
-    // DELETE
-    @DeleteMapping("/{id}")
-    public void deletar(@PathVariable Integer id){
-        usuarioRepository.deleteById(id);
+    // Derruba todas as sessoes (outros dispositivos saem) e abre uma nova neste navegador
+    @PutMapping("/senha")
+    public ResponseEntity<AuthResponse> alterarSenha(@AuthenticationPrincipal Jwt jwt,
+                                                     @CookieValue(name = SessaoService.COOKIE, required = false) String refresh,
+                                                     @Valid @RequestBody AlterarSenhaRequest req) {
+        boolean persistente = sessaoService.persistente(refresh);
+        Usuario usuario = contaService.alterarSenha(UsuarioLogado.id(jwt), req.senhaAtual(), req.novaSenha());
+        return sessaoService.iniciar(usuario, persistente, HttpStatus.OK);
     }
 }
