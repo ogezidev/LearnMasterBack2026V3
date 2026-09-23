@@ -2,6 +2,8 @@ package com.example.learnmaster.tccv2.model;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "MainDeck")
 public class MainDeck {
@@ -14,6 +16,10 @@ public class MainDeck {
 
     @Column(name = "usuario_id")
     private Integer usuarioId;
+
+    // Preenchido pelo banco (DEFAULT SYSUTCDATETIME()), em UTC
+    @Column(name = "criado_em", insertable = false, updatable = false)
+    private LocalDateTime criadoEm;
 
     public MainDeck() {
     }
@@ -40,5 +46,9 @@ public class MainDeck {
 
     public void setUsuarioId(Integer usuarioId) {
         this.usuarioId = usuarioId;
+    }
+
+    public LocalDateTime getCriadoEm() {
+        return criadoEm;
     }
 }

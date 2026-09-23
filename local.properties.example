@@ -1,0 +1,4 @@
+# Copie este arquivo para local.properties (que nao vai para o Git) e preencha.
+DB_URL=jdbc:sqlserver://SEU_HOST:1433;databaseName=LearnMaster;encrypt=true;trustServerCertificate=true
+DB_USER=
+DB_PASSWORD=
