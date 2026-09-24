@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface AvaliacaoRepository extends JpaRepository<Avaliacao, Integer> {
 
@@ -18,4 +19,9 @@ public interface AvaliacaoRepository extends JpaRepository<Avaliacao, Integer> {
     @Modifying
     @Query("delete from Avaliacao a where a.flashcardId in (select f.id from Flashcard f where f.deckId in :deckIds)")
     int apagarDosDecks(@Param("deckIds") Collection<Integer> deckIds);
+
+    // Avaliacao mais recente de cada card do usuario (empates no mesmo instante: o controller fica com o maior id)
+    @Query("select a from Avaliacao a where a.usuarioId = :usuarioId and a.avaliadoEm = "
+            + "(select max(b.avaliadoEm) from Avaliacao b where b.usuarioId = a.usuarioId and b.flashcardId = a.flashcardId)")
+    List<Avaliacao> atuaisDoUsuario(@Param("usuarioId") Integer usuarioId);
 }
