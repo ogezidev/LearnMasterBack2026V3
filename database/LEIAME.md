@@ -6,6 +6,7 @@ existe e pulado.
 
 | Script | O que faz |
 |---|---|
+| `000_criar_tabelas.sql` | **Só para banco novo (vazio):** recria as tabelas originais. Em banco existente não faz nada |
 | `001_verificacoes.sql` | **Só leitura.** Mostra o esquema atual e procura dados que impediriam as alterações |
 | `002_limites_texto.sql` | NVARCHAR(50) nos nomes, NVARCHAR(200) em frente/verso, com CHECK; senha com espaço para BCrypt |
 | `003_usuario_preferencias.sql` | Preferências, tutorial, último deck e `criado_em` em Usuario; e-mail único |
