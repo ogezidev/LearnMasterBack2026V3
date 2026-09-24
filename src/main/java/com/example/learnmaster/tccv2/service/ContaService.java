@@ -41,6 +41,15 @@ public class ContaService {
         return usuario;
     }
 
+    // Modo noturno e fonte para dislexia ficam no banco e acompanham o usuario em qualquer dispositivo
+    @Transactional
+    public Usuario atualizarPreferencias(Integer id, Boolean modoNoturno, Boolean fonteDislexia) {
+        Usuario usuario = buscar(id);
+        if (modoNoturno != null) usuario.setModoNoturno(modoNoturno);
+        if (fonteDislexia != null) usuario.setFonteDislexia(fonteDislexia);
+        return usuario;
+    }
+
     public Usuario buscar(Integer id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Sessão expirada. Entre novamente."));

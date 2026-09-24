@@ -40,6 +40,11 @@ public class UsuarioController {
         return UsuarioResponse.of(contaService.alterarEmail(UsuarioLogado.id(jwt), req.email(), req.senhaAtual()));
     }
 
+    @PatchMapping("/preferencias")
+    public UsuarioResponse atualizarPreferencias(@AuthenticationPrincipal Jwt jwt, @RequestBody PreferenciasRequest req) {
+        return UsuarioResponse.of(contaService.atualizarPreferencias(UsuarioLogado.id(jwt), req.modoNoturno(), req.fonteDislexia()));
+    }
+
     @PutMapping("/ultimo-deck")
     public UsuarioResponse definirUltimoDeck(@AuthenticationPrincipal Jwt jwt, @RequestBody UltimoDeckRequest req) {
         return UsuarioResponse.of(contaService.definirUltimoDeck(UsuarioLogado.id(jwt), req.deckId()));
