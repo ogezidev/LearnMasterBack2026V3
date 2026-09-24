@@ -40,6 +40,11 @@ public class UsuarioController {
         return UsuarioResponse.of(contaService.alterarEmail(UsuarioLogado.id(jwt), req.email(), req.senhaAtual()));
     }
 
+    @PutMapping("/ultimo-deck")
+    public UsuarioResponse definirUltimoDeck(@AuthenticationPrincipal Jwt jwt, @RequestBody UltimoDeckRequest req) {
+        return UsuarioResponse.of(contaService.definirUltimoDeck(UsuarioLogado.id(jwt), req.deckId()));
+    }
+
     // Derruba todas as sessoes (outros dispositivos saem) e abre uma nova neste navegador
     @PutMapping("/senha")
     public ResponseEntity<AuthResponse> alterarSenha(@AuthenticationPrincipal Jwt jwt,

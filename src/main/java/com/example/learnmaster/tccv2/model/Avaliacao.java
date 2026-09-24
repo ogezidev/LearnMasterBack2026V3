@@ -3,6 +3,7 @@ package com.example.learnmaster.tccv2.model;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 // Historico completo: a avaliacao atual de um card e a mais recente (maior avaliado_em)
 @Entity
@@ -22,7 +23,7 @@ public class Avaliacao {
     // 'dificil', 'bom' ou 'facil' (CHECK no banco)
     private String nivel;
 
-    @Column(name = "avaliado_em", insertable = false, updatable = false)
+    @Column(name = "avaliado_em", updatable = false)
     private LocalDateTime avaliadoEm;
 
     public Avaliacao() {
@@ -58,6 +59,11 @@ public class Avaliacao {
 
     public void setNivel(String nivel) {
         this.nivel = nivel;
+    }
+
+    @PrePersist
+    void aoCriar() {
+        if (avaliadoEm == null) avaliadoEm = LocalDateTime.now(ZoneOffset.UTC);
     }
 
     public LocalDateTime getAvaliadoEm() {

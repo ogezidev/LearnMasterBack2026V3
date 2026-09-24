@@ -3,6 +3,7 @@ package com.example.learnmaster.tccv2.model;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 // Token de redefinicao de senha: so o hash SHA-256 fica no banco; valido por 30 min e de uso unico
 @Entity
@@ -25,7 +26,8 @@ public class TokenRecuperacao {
     @Column(name = "usado_em")
     private LocalDateTime usadoEm;
 
-    @Column(name = "criado_em", insertable = false, updatable = false)
+    // Usado para limitar pedidos de recuperacao por e-mail
+    @Column(name = "criado_em", updatable = false)
     private LocalDateTime criadoEm;
 
     public TokenRecuperacao() {
@@ -69,6 +71,11 @@ public class TokenRecuperacao {
 
     public void setUsadoEm(LocalDateTime usadoEm) {
         this.usadoEm = usadoEm;
+    }
+
+    @PrePersist
+    void aoCriar() {
+        if (criadoEm == null) criadoEm = LocalDateTime.now(ZoneOffset.UTC);
     }
 
     public LocalDateTime getCriadoEm() {

@@ -2,6 +2,7 @@ package com.example.learnmaster.tccv2.service;
 
 import com.example.learnmaster.tccv2.exception.ApiException;
 import com.example.learnmaster.tccv2.model.Usuario;
+import com.example.learnmaster.tccv2.repository.DeckRepository;
 import com.example.learnmaster.tccv2.repository.UsuarioRepository;
 import com.example.learnmaster.tccv2.security.SenhaPolicy;
 import org.springframework.http.HttpStatus;
@@ -17,13 +18,27 @@ public class ContaService {
     private final AuthService authService;
     private final SessaoService sessaoService;
     private final PasswordEncoder passwordEncoder;
+    private final DeckRepository deckRepository;
 
     public ContaService(UsuarioRepository usuarioRepository, AuthService authService,
-                        SessaoService sessaoService, PasswordEncoder passwordEncoder) {
+                        SessaoService sessaoService, PasswordEncoder passwordEncoder,
+                        DeckRepository deckRepository) {
         this.usuarioRepository = usuarioRepository;
         this.authService = authService;
         this.sessaoService = sessaoService;
         this.passwordEncoder = passwordEncoder;
+        this.deckRepository = deckRepository;
+    }
+
+    // Deck aberto ao entrar em Memorizar; so aceita deck do proprio usuario
+    @Transactional
+    public Usuario definirUltimoDeck(Integer id, Integer deckId) {
+        Usuario usuario = buscar(id);
+        if (deckId != null) {
+            deckRepository.doUsuario(deckId, id).orElseThrow(ApiException::naoEncontrado);
+        }
+        usuario.setUltimoDeckId(deckId);
+        return usuario;
     }
 
     public Usuario buscar(Integer id) {
