@@ -42,7 +42,8 @@ public class UsuarioController {
 
     @PatchMapping("/preferencias")
     public UsuarioResponse atualizarPreferencias(@AuthenticationPrincipal Jwt jwt, @RequestBody PreferenciasRequest req) {
-        return UsuarioResponse.of(contaService.atualizarPreferencias(UsuarioLogado.id(jwt), req.modoNoturno(), req.fonteDislexia()));
+        return UsuarioResponse.of(contaService.atualizarPreferencias(UsuarioLogado.id(jwt), req.modoNoturno(), req.fonteDislexia(),
+                req.tutorialConcluido()));
     }
 
     @PutMapping("/ultimo-deck")

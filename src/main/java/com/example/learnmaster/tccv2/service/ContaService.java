@@ -41,12 +41,14 @@ public class ContaService {
         return usuario;
     }
 
-    // Modo noturno e fonte para dislexia ficam no banco e acompanham o usuario em qualquer dispositivo
+    // Preferencias e tutorial ficam no banco e acompanham o usuario em qualquer dispositivo
     @Transactional
-    public Usuario atualizarPreferencias(Integer id, Boolean modoNoturno, Boolean fonteDislexia) {
+    public Usuario atualizarPreferencias(Integer id, Boolean modoNoturno, Boolean fonteDislexia,
+                                         Boolean tutorialConcluido) {
         Usuario usuario = buscar(id);
         if (modoNoturno != null) usuario.setModoNoturno(modoNoturno);
         if (fonteDislexia != null) usuario.setFonteDislexia(fonteDislexia);
+        if (tutorialConcluido != null) usuario.setTutorialConcluido(tutorialConcluido);
         return usuario;
     }
 
