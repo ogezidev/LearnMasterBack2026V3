@@ -15,7 +15,7 @@ import java.util.List;
  * Cada metodo roda numa transacao: ou tudo e gravado, ou nada.
  *
  * A exclusao apaga explicitamente cada nivel (em vez de depender so do ON DELETE CASCADE)
- * porque Avaliacao e Usuario.ultimo_deck_id nao podem ter cascata no SQL Server.
+ * porque Avaliacao, Usuario.ultimo_deck_id e Lembrete.deck_id nao podem ter cascata no SQL Server.
  * A posse dos itens ja foi conferida no controller.
  */
 @Service
@@ -26,15 +26,17 @@ public class HierarquiaService {
     private final FlashcardRepository flashcardRepository;
     private final AvaliacaoRepository avaliacaoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final LembreteRepository lembreteRepository;
 
     public HierarquiaService(MainDeckRepository mainDeckRepository, DeckRepository deckRepository,
                              FlashcardRepository flashcardRepository, AvaliacaoRepository avaliacaoRepository,
-                             UsuarioRepository usuarioRepository) {
+                             UsuarioRepository usuarioRepository, LembreteRepository lembreteRepository) {
         this.mainDeckRepository = mainDeckRepository;
         this.deckRepository = deckRepository;
         this.flashcardRepository = flashcardRepository;
         this.avaliacaoRepository = avaliacaoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.lembreteRepository = lembreteRepository;
     }
 
     @Transactional
@@ -71,6 +73,7 @@ public class HierarquiaService {
         if (deckIds.isEmpty()) return;
         avaliacaoRepository.apagarDosDecks(deckIds);
         usuarioRepository.esquecerUltimoDeck(deckIds);
+        lembreteRepository.soltarDosDecks(deckIds);
         flashcardRepository.apagarDosDecks(deckIds);
         deckRepository.apagar(deckIds);
     }

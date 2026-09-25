@@ -1,5 +1,6 @@
 package com.example.learnmaster.tccv2.service;
 
+import com.example.learnmaster.tccv2.dto.AppAuthResponse;
 import com.example.learnmaster.tccv2.dto.AuthResponse;
 import com.example.learnmaster.tccv2.dto.UsuarioResponse;
 import com.example.learnmaster.tccv2.exception.ApiException;
@@ -31,6 +32,7 @@ import java.time.ZoneOffset;
  * - refresh token (aleatorio): vai em cookie httpOnly e so o hash fica no banco. Cada uso gera um novo
  *   (o anterior e revogado). Com "Continuar logado" o cookie dura 30 dias; sem, e cookie de sessao,
  *   apagado quando o navegador fecha.
+ * O app mobile usa o mesmo refresh token, mas recebido e enviado no corpo (veja AppAuthController).
  */
 @Service
 public class SessaoService {
@@ -66,6 +68,16 @@ public class SessaoService {
         return ResponseEntity.status(status)
                 .header(HttpHeaders.SET_COOKIE, cookie(refresh, persistente).toString())
                 .body(resposta(usuario));
+    }
+
+    // Sessao do app: sempre persistente (30 dias); o refresh token vai no corpo da resposta
+    @Transactional
+    public AppAuthResponse iniciarApp(Usuario usuario) {
+        return respostaApp(usuario, criarRefresh(usuario.getId(), true));
+    }
+
+    public AppAuthResponse respostaApp(Usuario usuario, String refresh) {
+        return new AppAuthResponse(gerarAcesso(usuario), DURACAO_ACESSO.toSeconds(), refresh, UsuarioResponse.of(usuario));
     }
 
     // Valida o refresh token recebido, revoga-o e devolve o id do usuario e um token novo

@@ -14,10 +14,10 @@ O `database/LEIAME.md` explica cada um. Resumo:
 | Script | O que faz |
 |---|---|
 | `001_verificacoes.sql` | Só leitura: mostra o esquema e procura dados que impediriam as alterações |
-| `002` a `009` | Limites de texto, preferências do usuário, `criado_em`, tabelas `Avaliacao`, `TokenRecuperacao` e `RefreshToken`, FKs em cascata, remoção de colunas redundantes e código de recuperação |
+| `002` a `010` | Limites de texto, preferências do usuário, `criado_em`, tabelas `Avaliacao`, `TokenRecuperacao` e `RefreshToken`, FKs em cascata, remoção de colunas redundantes, código de recuperação e lembretes do app |
 
 Os scripts podem ser rodados mais de uma vez e desfazem tudo se algo der errado.
-**O backend só funciona depois dos scripts 002 a 009.**
+**O backend só funciona depois dos scripts 002 a 010.**
 
 ## 2. Configuração (fora do Git)
 
@@ -52,6 +52,8 @@ Erros sempre voltam como `{ "mensagem": "..." }`.
 | `PUT /usuarios/me/email`, `PUT /usuarios/me/senha` | Exigem a senha atual; trocar a senha encerra as outras sessões |
 | `PATCH /usuarios/me/preferencias` | Modo noturno, fonte para dislexia e tutorial concluído |
 | `PUT /usuarios/me/ultimo-deck` | Último deck estudado |
+| `POST /auth/app/login`, `/auth/app/refresh`, `/auth/app/logout` | Sessão do app mobile: mesmas regras do login da web, mas o refresh token vai no corpo (o app guarda no armazenamento seguro). Não há cadastro pelo app |
+| `GET / POST /lembretes`, `PUT / DELETE /lembretes/{id}` | Lembretes de estudo do app (até 20 por conta): título, deck opcional, `UMA_VEZ` (data), `DIARIO` ou `SEMANAL` (`diasSemana` 1 = segunda … 7 = domingo), horário local e ativo |
 | `/maindecks`, `/decks`, `/flashcards` | CRUD da hierarquia. Só acessa dados do próprio usuário; excluir apaga os filhos e as avaliações numa transação |
 | `POST /flashcards/lote` | Cria de 1 a 5 cards de uma vez (todos ou nenhum) |
 | `POST /avaliacoes`, `GET /avaliacoes/atuais` | Avaliação Difícil/Bom/Fácil (histórico completo) e a mais recente de cada card |
