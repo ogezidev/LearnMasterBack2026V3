@@ -13,4 +13,5 @@ MAIL_USER=
 MAIL_PASSWORD=
 MAIL_FROM=
 
+# Origens liberadas no CORS, separadas por virgula (8081 = previa web do app mobile)
 FRONTEND_URL=http://localhost:5173

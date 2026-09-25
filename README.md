@@ -28,7 +28,7 @@ Copie `local.properties.example` para `local.properties`, na raiz do projeto, e 
 | `DB_URL`, `DB_USER`, `DB_PASSWORD` | Conexão com o SQL Server |
 | `JWT_SECRET` | Chave do token de acesso (mínimo 32 caracteres aleatórios) |
 | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD`, `MAIL_FROM` | SMTP para a recuperação de senha. No Gmail: `smtp.gmail.com`, `587` e uma **senha de app**. Com `MAIL_HOST` vazio, o código aparece só no log (útil para testar) |
-| `FRONTEND_URL` | Origem liberada no CORS (padrão `http://localhost:5173`) |
+| `FRONTEND_URL` | Origens liberadas no CORS, separadas por vírgula (padrão `http://localhost:5173`). O app no celular não depende disso |
 | `COOKIE_SECURE`, `COOKIE_SAMESITE` | Opcionais. Padrão `true` e `Strict`. Com frontend e backend em domínios diferentes, use `SameSite=None` |
 
 Em vez do arquivo, podem ser usadas variáveis de ambiente com os mesmos nomes.
