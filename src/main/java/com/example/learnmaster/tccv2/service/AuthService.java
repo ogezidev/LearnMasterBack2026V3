@@ -28,6 +28,8 @@ public class AuthService {
     private static final Duration VALIDADE_RECUPERACAO = Duration.ofMinutes(30);
     private static final Duration JANELA_RECUPERACAO = Duration.ofMinutes(15);
     private static final int MAX_PEDIDOS_RECUPERACAO = 3;
+    private static final int MAX_TENTATIVAS_CODIGO = 5;
+    private static final String CODIGO_EXPIRADO = "Código inválido ou expirado. Peça um novo código.";
 
     private final UsuarioRepository usuarioRepository;
     private final TokenRecuperacaoRepository tokenRecuperacaoRepository;
@@ -35,7 +37,8 @@ public class AuthService {
     private final LoginRateLimiter rateLimiter;
     private final SessaoService sessaoService;
     private final EmailService emailService;
-    private final String frontendUrl;
+    // Chave do HMAC dos codigos de recuperacao (a mesma do JWT, que ja fica fora do codigo)
+    private final String chaveCodigo;
     // Hash usado quando o e-mail nao existe, para o login levar o mesmo tempo nos dois casos
     private final String hashFicticio;
 
@@ -45,14 +48,14 @@ public class AuthService {
                        LoginRateLimiter rateLimiter,
                        SessaoService sessaoService,
                        EmailService emailService,
-                       @Value("${app.frontend-url}") String frontendUrl) {
+                       @Value("${app.jwt.secret}") String chaveCodigo) {
         this.usuarioRepository = usuarioRepository;
         this.tokenRecuperacaoRepository = tokenRecuperacaoRepository;
         this.passwordEncoder = passwordEncoder;
         this.rateLimiter = rateLimiter;
         this.sessaoService = sessaoService;
         this.emailService = emailService;
-        this.frontendUrl = frontendUrl;
+        this.chaveCodigo = chaveCodigo;
         this.hashFicticio = passwordEncoder.encode("senha-ficticia-para-tempo-constante");
     }
 
@@ -132,32 +135,58 @@ public class AuthService {
 
         tokenRecuperacaoRepository.invalidarPendentes(usuario.getId(), agora);
 
-        String token = Tokens.gerar();
+        String codigo = Tokens.gerarCodigo();
         TokenRecuperacao registro = new TokenRecuperacao();
         registro.setUsuarioId(usuario.getId());
-        registro.setTokenHash(Tokens.hash(token));
+        registro.setTokenHash(hashCodigo(usuario.getId(), codigo));
         registro.setExpiraEm(agora.plus(VALIDADE_RECUPERACAO));
         tokenRecuperacaoRepository.save(registro);
 
-        String link = frontendUrl + "/redefinir-senha?token=" + token;
-        emailService.enviarRecuperacao(usuario.getEmail(), usuario.getNome(), link);
+        emailService.enviarRecuperacao(usuario.getEmail(), usuario.getNome(), codigo);
     }
 
-    // Troca a senha, marca o token como usado e derruba todas as sessoes, tudo na mesma transacao
-    @Transactional
-    public void redefinirSenha(String token, String novaSenha) {
-        TokenRecuperacao registro = tokenRecuperacaoRepository.findByTokenHash(Tokens.hash(token)).orElse(null);
-        LocalDateTime agora = SessaoService.agoraUtc();
-        if (registro == null || registro.getUsadoEm() != null || registro.getExpiraEm().isBefore(agora)) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Link inválido ou expirado. Peça um novo.");
-        }
+    /*
+     * Confere o codigo do ultimo pedido do usuario e troca a senha. Cada codigo errado conta uma
+     * tentativa; no 5o erro o codigo deixa de valer. noRollbackFor mantem a contagem gravada mesmo
+     * quando a resposta e um erro. Com o codigo certo: troca a senha, marca o codigo como usado e
+     * derruba todas as sessoes, tudo na mesma transacao.
+     */
+    @Transactional(noRollbackFor = ApiException.class)
+    public void redefinirSenha(String emailInformado, String codigo, String novaSenha) {
         SenhaPolicy.validar(novaSenha);
 
-        Usuario usuario = usuarioRepository.findById(registro.getUsuarioId())
-                .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Link inválido ou expirado. Peça um novo."));
+        Usuario usuario = usuarioRepository.findByEmailIgnoreCase(normalizarEmail(emailInformado)).orElse(null);
+        TokenRecuperacao registro = usuario == null ? null
+                : tokenRecuperacaoRepository.findFirstByUsuarioIdAndUsadoEmIsNullOrderByIdDesc(usuario.getId()).orElse(null);
+        LocalDateTime agora = SessaoService.agoraUtc();
+        if (registro == null || registro.getExpiraEm().isBefore(agora)
+                || registro.getTentativas() >= MAX_TENTATIVAS_CODIGO) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, CODIGO_EXPIRADO);
+        }
+
+        boolean confere = MessageDigest.isEqual(
+                registro.getTokenHash().trim().getBytes(StandardCharsets.UTF_8),
+                hashCodigo(usuario.getId(), codigo).getBytes(StandardCharsets.UTF_8));
+        if (!confere) {
+            int tentativas = registro.getTentativas() + 1;
+            registro.setTentativas(tentativas);
+            int restantes = MAX_TENTATIVAS_CODIGO - tentativas;
+            if (restantes <= 0) {
+                registro.setUsadoEm(agora);
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Código incorreto. Peça um novo código.");
+            }
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Código incorreto. "
+                    + (restantes == 1 ? "Resta 1 tentativa." : "Restam " + restantes + " tentativas."));
+        }
+
         usuario.setSenha(passwordEncoder.encode(novaSenha));
         registro.setUsadoEm(agora);
         sessaoService.revogarTodas(usuario.getId());
         rateLimiter.limpar(normalizarEmail(usuario.getEmail()));
+    }
+
+    // O id do usuario entra no HMAC: o mesmo codigo gera hashes diferentes em contas diferentes
+    private String hashCodigo(Integer usuarioId, String codigo) {
+        return Tokens.hmac(chaveCodigo, usuarioId + ":" + codigo);
     }
 }

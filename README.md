@@ -14,10 +14,10 @@ O `database/LEIAME.md` explica cada um. Resumo:
 | Script | O que faz |
 |---|---|
 | `001_verificacoes.sql` | Só leitura: mostra o esquema e procura dados que impediriam as alterações |
-| `002` a `008` | Limites de texto, preferências do usuário, `criado_em`, tabelas `Avaliacao`, `TokenRecuperacao` e `RefreshToken`, FKs em cascata e remoção de colunas redundantes |
+| `002` a `009` | Limites de texto, preferências do usuário, `criado_em`, tabelas `Avaliacao`, `TokenRecuperacao` e `RefreshToken`, FKs em cascata, remoção de colunas redundantes e código de recuperação |
 
 Os scripts podem ser rodados mais de uma vez e desfazem tudo se algo der errado.
-**O backend só funciona depois dos scripts 002 a 008.**
+**O backend só funciona depois dos scripts 002 a 009.**
 
 ## 2. Configuração (fora do Git)
 
@@ -27,8 +27,8 @@ Copie `local.properties.example` para `local.properties`, na raiz do projeto, e 
 |---|---|
 | `DB_URL`, `DB_USER`, `DB_PASSWORD` | Conexão com o SQL Server |
 | `JWT_SECRET` | Chave do token de acesso (mínimo 32 caracteres aleatórios) |
-| `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD`, `MAIL_FROM` | SMTP para a recuperação de senha. No Gmail: `smtp.gmail.com`, `587` e uma **senha de app**. Com `MAIL_HOST` vazio, o link aparece só no log (útil para testar) |
-| `FRONTEND_URL` | Origem liberada no CORS e base do link de recuperação (padrão `http://localhost:5173`) |
+| `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD`, `MAIL_FROM` | SMTP para a recuperação de senha. No Gmail: `smtp.gmail.com`, `587` e uma **senha de app**. Com `MAIL_HOST` vazio, o código aparece só no log (útil para testar) |
+| `FRONTEND_URL` | Origem liberada no CORS (padrão `http://localhost:5173`) |
 | `COOKIE_SECURE`, `COOKIE_SAMESITE` | Opcionais. Padrão `true` e `Strict`. Com frontend e backend em domínios diferentes, use `SameSite=None` |
 
 Em vez do arquivo, podem ser usadas variáveis de ambiente com os mesmos nomes.
@@ -47,7 +47,7 @@ Erros sempre voltam como `{ "mensagem": "..." }`.
 |---|---|
 | `POST /auth/cadastro`, `POST /auth/login` | Criam a sessão: token de acesso (15 min) + refresh token em cookie httpOnly (30 dias com "continuar logado"; senão, até fechar o navegador) |
 | `POST /auth/refresh`, `POST /auth/logout` | Renovam (o refresh anterior é invalidado) e encerram a sessão no servidor |
-| `POST /auth/recuperar`, `POST /auth/redefinir` | Recuperação de senha: resposta igual exista ou não o e-mail; token com hash no banco, 30 min, uso único, até 3 pedidos a cada 15 min |
+| `POST /auth/recuperar`, `POST /auth/redefinir` | Recuperação de senha: envia por e-mail um código de 6 dígitos; `redefinir` recebe `{ email, codigo, novaSenha }`. Resposta igual exista ou não o e-mail; código com HMAC no banco, 30 min, uso único, até 5 erros por código e 3 pedidos a cada 15 min |
 | `GET / PATCH /usuarios/me` | Dados da conta (sem senha) e troca de nome |
 | `PUT /usuarios/me/email`, `PUT /usuarios/me/senha` | Exigem a senha atual; trocar a senha encerra as outras sessões |
 | `PATCH /usuarios/me/preferencias` | Modo noturno, fonte para dislexia e tutorial concluído |

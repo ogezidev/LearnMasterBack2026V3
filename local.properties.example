@@ -6,7 +6,7 @@ DB_PASSWORD=
 # Chave do token de acesso (minimo 32 caracteres aleatorios)
 JWT_SECRET=
 
-# Gmail: smtp.gmail.com / 587 / seu e-mail / senha de app de 16 letras
+# Gmail: smtp.gmail.com / 587 / e-mail / senha de app de 16 letras (envia o codigo de recuperacao)
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
 MAIL_USER=

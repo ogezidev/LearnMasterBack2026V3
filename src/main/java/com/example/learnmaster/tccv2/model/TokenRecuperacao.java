@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
-// Token de redefinicao de senha: so o hash SHA-256 fica no banco; valido por 30 min e de uso unico
+// Codigo de 6 digitos para redefinir a senha: so o HMAC fica no banco; vale 30 min, uma vez e ate 5 erros
 @Entity
 @Table(name = "TokenRecuperacao")
 public class TokenRecuperacao {
@@ -25,6 +25,10 @@ public class TokenRecuperacao {
 
     @Column(name = "usado_em")
     private LocalDateTime usadoEm;
+
+    // Codigos errados digitados para este pedido
+    @Column(name = "tentativas")
+    private int tentativas;
 
     // Usado para limitar pedidos de recuperacao por e-mail
     @Column(name = "criado_em", updatable = false)
@@ -71,6 +75,14 @@ public class TokenRecuperacao {
 
     public void setUsadoEm(LocalDateTime usadoEm) {
         this.usadoEm = usadoEm;
+    }
+
+    public int getTentativas() {
+        return tentativas;
+    }
+
+    public void setTentativas(int tentativas) {
+        this.tentativas = tentativas;
     }
 
     @PrePersist

@@ -66,12 +66,12 @@ public class AuthController {
     @PostMapping("/recuperar")
     public Map<String, String> recuperar(@Valid @RequestBody RecuperarSenhaRequest req) {
         authService.solicitarRecuperacao(req.email());
-        return Map.of("mensagem", "Se o e-mail estiver cadastrado, você receberá um link para redefinir a senha.");
+        return Map.of("mensagem", "Se o e-mail estiver cadastrado, você receberá um código para redefinir a senha.");
     }
 
     @PostMapping("/redefinir")
     public Map<String, String> redefinir(@Valid @RequestBody RedefinirSenhaRequest req) {
-        authService.redefinirSenha(req.token(), req.novaSenha());
+        authService.redefinirSenha(req.email(), req.codigo(), req.novaSenha());
         return Map.of("mensagem", "Senha redefinida com sucesso. Entre com a nova senha.");
     }
 }

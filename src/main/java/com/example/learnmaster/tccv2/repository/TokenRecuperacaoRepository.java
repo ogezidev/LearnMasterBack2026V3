@@ -11,11 +11,12 @@ import java.util.Optional;
 
 public interface TokenRecuperacaoRepository extends JpaRepository<TokenRecuperacao, Integer> {
 
-    Optional<TokenRecuperacao> findByTokenHash(String tokenHash);
+    // Pedido mais recente ainda nao usado (os anteriores sao invalidados a cada pedido novo)
+    Optional<TokenRecuperacao> findFirstByUsuarioIdAndUsadoEmIsNullOrderByIdDesc(Integer usuarioId);
 
     long countByUsuarioIdAndCriadoEmAfter(Integer usuarioId, LocalDateTime desde);
 
-    // Um link novo invalida os anteriores ainda nao usados
+    // Um codigo novo invalida os anteriores ainda nao usados
     @Modifying
     @Query("update TokenRecuperacao t set t.usadoEm = :agora where t.usuarioId = :usuarioId and t.usadoEm is null")
     int invalidarPendentes(@Param("usuarioId") Integer usuarioId, @Param("agora") LocalDateTime agora);

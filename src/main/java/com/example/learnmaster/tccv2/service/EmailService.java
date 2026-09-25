@@ -29,30 +29,33 @@ public class EmailService {
 
     // Roda em segundo plano: o tempo de resposta de /auth/recuperar nao revela se o e-mail existe
     @Async
-    public void enviarRecuperacao(String para, String nome, String link) {
+    public void enviarRecuperacao(String para, String nome, String codigo) {
         JavaMailSender sender = mailSender.getIfAvailable();
         if (host.isBlank() || sender == null) {
-            // Sem SMTP configurado (desenvolvimento): o link aparece so no log do backend
-            log.warn("SMTP nao configurado (MAIL_HOST vazio). Link de redefinicao para {}: {}", para, link);
+            // Sem SMTP configurado (desenvolvimento): o codigo aparece so no log do backend
+            log.warn("SMTP nao configurado (MAIL_HOST vazio). Codigo de recuperacao para {}: {}", para, codigo);
             return;
         }
 
         SimpleMailMessage mensagem = new SimpleMailMessage();
         mensagem.setFrom(remetente);
         mensagem.setTo(para);
-        mensagem.setSubject("LearnMaster - Redefinição de senha");
+        mensagem.setSubject("LearnMaster - Código de recuperação de senha");
         mensagem.setText("""
                 Olá, %s!
 
                 Recebemos um pedido para redefinir a senha da sua conta no LearnMaster.
-                Para criar uma nova senha, acesse o link abaixo (válido por 30 minutos e por um único uso):
+                Seu código de recuperação é:
 
-                %s
+                        %s
+
+                Digite este código na tela de recuperação de senha do LearnMaster.
+                Ele vale por 30 minutos e por um único uso.
 
                 Se você não fez esse pedido, ignore este e-mail. Sua senha continua a mesma.
 
                 Equipe LearnMaster
-                """.formatted(nome, link));
+                """.formatted(nome, codigo));
 
         try {
             sender.send(mensagem);
