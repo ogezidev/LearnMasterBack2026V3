@@ -66,28 +66,28 @@ BEGIN TRY
     BEGIN
         IF EXISTS (SELECT 1 FROM dbo.MainDeck WHERE LEN(CAST(nome AS NVARCHAR(MAX))) = 0)
             THROW 50002, 'Existe LearnDeck (MainDeck) com nome vazio. Corrija antes de continuar.', 1;
-        ALTER TABLE dbo.MainDeck WITH CHECK ADD CONSTRAINT CK_MainDeck_nome CHECK (LEN(nome) BETWEEN 1 AND 50);
+        EXEC (N'ALTER TABLE dbo.MainDeck WITH CHECK ADD CONSTRAINT CK_MainDeck_nome CHECK (LEN(nome) BETWEEN 1 AND 50)');
     END
 
     IF OBJECT_ID('dbo.CK_Deck_nome', 'C') IS NULL
     BEGIN
         IF EXISTS (SELECT 1 FROM dbo.Deck WHERE LEN(CAST(nome AS NVARCHAR(MAX))) = 0)
             THROW 50003, 'Existe Deck com nome vazio. Corrija antes de continuar.', 1;
-        ALTER TABLE dbo.Deck WITH CHECK ADD CONSTRAINT CK_Deck_nome CHECK (LEN(nome) BETWEEN 1 AND 50);
+        EXEC (N'ALTER TABLE dbo.Deck WITH CHECK ADD CONSTRAINT CK_Deck_nome CHECK (LEN(nome) BETWEEN 1 AND 50)');
     END
 
     IF OBJECT_ID('dbo.CK_Flashcard_frente', 'C') IS NULL
     BEGIN
         IF EXISTS (SELECT 1 FROM dbo.Flashcard WHERE LEN(CAST(frente AS NVARCHAR(MAX))) = 0)
             THROW 50004, 'Existe Flashcard com frente vazia. Corrija antes de continuar.', 1;
-        ALTER TABLE dbo.Flashcard WITH CHECK ADD CONSTRAINT CK_Flashcard_frente CHECK (LEN(frente) BETWEEN 1 AND 200);
+        EXEC (N'ALTER TABLE dbo.Flashcard WITH CHECK ADD CONSTRAINT CK_Flashcard_frente CHECK (LEN(frente) BETWEEN 1 AND 200)');
     END
 
     IF OBJECT_ID('dbo.CK_Flashcard_verso', 'C') IS NULL
     BEGIN
         IF EXISTS (SELECT 1 FROM dbo.Flashcard WHERE LEN(CAST(verso AS NVARCHAR(MAX))) = 0)
             THROW 50005, 'Existe Flashcard com verso vazio. Corrija antes de continuar.', 1;
-        ALTER TABLE dbo.Flashcard WITH CHECK ADD CONSTRAINT CK_Flashcard_verso CHECK (LEN(verso) BETWEEN 1 AND 200);
+        EXEC (N'ALTER TABLE dbo.Flashcard WITH CHECK ADD CONSTRAINT CK_Flashcard_verso CHECK (LEN(verso) BETWEEN 1 AND 200)');
     END
 
     COMMIT;
